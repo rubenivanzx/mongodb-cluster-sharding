@@ -1,66 +1,58 @@
-Práctica: Base de Datos Distribuida con MongoDB y Docker
+# Proyecto: Base de Datos Distribuidas con MongoDB Sharding y Docker
 
+**Asignatura:** Bases de Datos Avanzadas  
+**Profesor:** José Saúl de Lira Miramontes  
 
+**Integrantes:**
+* Jose Armando Castillo Navarrete — *Matrícula: 385509*
+* Ruben Ivan Garcia Melendez — *Matrícula: 385508*
 
-Datos de la Materia y Equipo
+---
 
-\* \*\*Integrantes del Equipo:\*\*
+## 1. Objetivo
+Implementar soluciones para Bases de Datos Distribuidas mediante la configuración de un clúster de MongoDB en Sharding sobre contenedores de Docker, ejecutando operaciones CRUD distribuidas y monitoreando el balanceo de carga entre shards.
 
-&#x20; \* Ruben Ivan Garcia Melendez 385508
+---
 
-&#x20; \* Jose Armando Castillo Navarrete 385509
+## 2. Arquitectura del Clúster (Docker Compose)
+El clúster fue configurado sobre Docker utilizando la siguiente estructura de nodos:
 
+* **Router (`mongos`):** Punto de entrada único para las peticiones de los clientes.
+* **Servidor de Configuración (`configsvr`):** Mantiene los metadatos y la ubicación de los chunks en el clúster.
+* **Shards (`shard1`, `shard2`, `shard3`):** Tres nodos configurados con **Replica Set** para almacenamiento fragmentado de datos y alta disponibilidad.
 
+### Configuración del `docker-compose.yml`
+```yaml
+version: '3.8'
 
+services:
+  # Config Server
+  configsvr:
+    image: mongo:latest
+    container_name: configsvr
+    command: mongod --configsvr --replSet configReplSet --port 27019 --bind_ip_all
 
+  # Shards
+  shard1:
+    image: mongo:latest
+    container_name: shard1
+    command: mongod --shardsvr --replSet shard1ReplSet --port 27018 --bind_ip_all
 
-1\. Objetivo
+  shard2:
+    image: mongo:latest
+    container_name: shard2
+    command: mongod --shardsvr --replSet shard2ReplSet --port 27018 --bind_ip_all
 
-Implementar y desplegar una arquitectura de base de datos distribuida utilizando un cluster de MongoDB fragmentado (Sharded Cluster) sobre contenedores Docker.
+  shard3:
+    image: mongo:latest
+    container_name: shard3
+    command: mongod --shardsvr --replSet shard3ReplSet --port 27018 --bind_ip_all
 
-
-
-\---
-
-&#x20;2. Arquitectura del Cluster
-
-El clúster está compuesto por 5 contenedores en la red `mongo-cluster-net`:
-
-1\. \*\*Config Server (`configsvr`):\*\* Gestiona los metadatos y la configuración del cluster (Puerto 27019).
-
-2\. \*\*Shard 1 (`shard1`):\*\* Nodo de almacenamiento 1 (Puerto 27018).
-
-3\. \*\*Shard 2 (`shard2`):\*\* Nodo de almacenamiento 2 (Puerto 27020).
-
-4\. \*\*Shard 3 (`shard3`):\*\* Nodo de almacenamiento 3 (Puerto 27021).
-
-5\. \*\*Mongos Router (`mongos`):\*\* Enrutador de consultas de la base de datos (Puerto 27017).
-
-
-
-
-
-3\. Definición del Documento y Shard Key
-
-\* \*\*Base de Datos:\*\* `empresa\_db`
-
-\* \*\*Colección:\*\* `usuarios`
-
-\* \*\*Estructura del Documento:\*\*
-
-```json
-
-{
-
-&#x20; "\_id": ObjectId("..."),
-
-&#x20; "pais": "Mexico",
-
-&#x20; "nombre": "Carlos Mendoza",
-
-&#x20; "email": "carlos@example.com",
-
-&#x20; "edad": 30
-
-}
+  # Router
+  mongos:
+    image: mongo:latest
+    container_name: mongos
+    command: mongos --configdb configReplSet/configsvr:27019 --bind_ip_all --port 27017
+    ports:
+      - "27017:27017"
 
