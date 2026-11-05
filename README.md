@@ -6,9 +6,9 @@ Datos de la Materia y Equipo
 
 \* \*\*Integrantes del Equipo:\*\*
 
-&#x20; \* Ruben Ivan Garcia Melendez
+&#x20; \* Ruben Ivan Garcia Melendez 385508
 
-&#x20; \* Jose Armando Castillo Navarrete
+&#x20; \* Jose Armando Castillo Navarrete 385509
 
 
 
